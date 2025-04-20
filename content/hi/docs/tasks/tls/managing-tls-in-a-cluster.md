@@ -89,7 +89,7 @@ cat <<EOF | cfssl genkey - | cfssljson -bare server
 EOF
 ```
 
-जहां 192.0.2.24 सर्विस का क्लस्टर आईपी है, my-svc.my-namespace.svc.cluster.local सर्विस का DNS का नाम है, 10.0.34.2 पॉड का आईपी है और my-pod.my-namespace.pod.cluster.local पॉड का DNS का नाम है। आपको इसके समान आउटपुट देखना चाहिए:
+जहां 192.0.2.24 सर्विस का क्लस्टर आईपी है, my-svc.my-namespace.svc.cluster.local सर्विस के DNS का नाम है, 10.0.34.2 पॉड का आईपी है और my-pod.my-namespace.pod.cluster.local पॉड के DNS का नाम है। आपको इसके समान आउटपुट देखना चाहिए:
 
 ```
 2022/02/01 11:45:32 [INFO] generate received request
