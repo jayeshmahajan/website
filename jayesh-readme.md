@@ -3,6 +3,7 @@
 cd my-projects/github/kubernetes/opensource/website-jayesh/website
 git fetch --all
 BRANCH=jm/hi-example-guestbook
+git checkout upstream/main
 git checkout -b $BRANCH upstream/main
 
 
