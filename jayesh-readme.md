@@ -35,4 +35,6 @@ RUN mkdir -p $HOME/src && \
     cd $HOME/src && \
     curl -L -o hugo_extended.tar.gz https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_Linux-64bit.tar.gz && \
     tar -xzf hugo_extended.tar.gz && \
-    mv hugo /go/bin/hugo ```
+    mv hugo /go/bin/hugo
+```
+local follow https://kubernetes.io/docs/contribute/new-content/open-a-pr/#preview-locally
