@@ -9,7 +9,7 @@ author: >
 
 ---
 
-As Kubernetes adoption grows, many organizations operate shared clusters serving multiple teams and applications. Without proper resource governance, these environments face critical challenges: one team's resource-hungry workload can starve others (the "noisy neighbor" problem), costs spiral unpredictably, and cluster stability becomes fragile. This post explores battle-tested patterns for implementing Resource Quotas and Limit Ranges that scale across your organization.
+As Kubernetes adoption grows, many organizations operate shared clusters serving multiple teams and applications. Without proper resource governance, these environments face critical challenges: one team's resource-hungry workload can starve others (the "noisy neighbor" problem), costs spiral unpredictably, and cluster stability becomes fragile. This post explores battle-tested patterns for implementing {{< glossary_tooltip text="Resource Quotas" term_id="resource-quota" >}} and {{< glossary_tooltip text="Limit Ranges" term_id="limit-range" >}} that scale across your organization.
 
 ## The problem: Resource contention without governance
 
@@ -19,20 +19,20 @@ Without resource boundaries, you also face:
 
 - **Unpredictable costs**: No visibility into per-team resource consumption
 - **Unfair resource allocation**: Early teams monopolize resources
-- **Cluster instability**: Unconstrained pods can trigger node failures
+- **Cluster instability**: Unconstrained {{< glossary_tooltip text="pods" term_id="pod" >}} can trigger node failures
 - **Complex troubleshooting**: Hard to attribute resource exhaustion to specific teams
 
 ## Understanding Resource Quotas and Limit Ranges
 
 Before implementing practices, let's clarify these two complementary Kubernetes features:
 
-**Resource Quotas** limit the aggregate resource consumption within a namespace:
+**{{< glossary_tooltip text="Resource Quotas" term_id="resource-quota" >}}** limit the aggregate resource consumption within a {{< glossary_tooltip text="namespace" term_id="namespace" >}}:
 
-- Total CPU/memory across all pods
-- Number of pods, services, or persistent volumes
+- Total CPU/memory across all {{< glossary_tooltip text="pods" term_id="pod" >}}
+- Number of pods, {{< glossary_tooltip text="services" term_id="service" >}}, or persistent volumes
 - Storage limits
 
-**Limit Ranges** enforce per-pod resource constraints:
+**{{< glossary_tooltip text="Limit Ranges" term_id="limit-range" >}}** enforce per-pod resource constraints:
 
 - Minimum and maximum CPU/memory per container
 - Default requests and limits for containers without explicit specifications
@@ -100,7 +100,7 @@ Teams should understand: "You have a quota of 100 CPU cores. If you hit 85%, we'
 
 Resource quotas only work when pods declare requests and limits. Without them:
 
-- The scheduler can't make intelligent placement decisions
+- The {{< glossary_tooltip text="scheduler" term_id="kube-scheduler" >}} can't make intelligent placement decisions
 - Quotas don't prevent the noisy neighbor problem
 
 **Minimum requirement**: Set requests for all containers
@@ -158,8 +158,12 @@ spec:
 This prevents:
 
 - Unbounded containers that consume cluster resources
-- Impossible requests that scheduler can't satisfy
+- Impossible requests that the scheduler can't satisfy
 - Unexpected quota exhaustion
+
+{{< note >}}
+Limit Ranges with defaults ensure that every container gets reasonable resource constraints, even if developers forget to specify them explicitly in their pod specifications.
+{{< /note >}}
 
 ## Best Practice 5: Monitor and iterate
 
@@ -205,9 +209,13 @@ Team Payments - Resource Budget
 
 Resource quotas address compute, but also consider:
 
-- **Network bandwidth**: Pod Disruption Budgets for stability
-- **Storage**: Persistent Volume quotas
+- **Network bandwidth**: {{< glossary_tooltip text="Pod Disruption Budgets" term_id="pod-disruption-budget" >}} for stability
+- **Storage**: {{< glossary_tooltip text="Persistent Volume" term_id="persistent-volume" >}} quotas
 - **API rate limits**: Prevent stampeding through kube-apiserver
+
+{{< note >}}
+While this post focuses on compute resources, a comprehensive governance strategy should also address network and storage isolation. Consider implementing {{< glossary_tooltip text="Network Policies" term_id="network-policy" >}} alongside resource quotas for complete multi-tenant isolation.
+{{< /note >}}
 
 ## Practical example: Configuring for a team
 
@@ -219,6 +227,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: team-payments
+  labels:
+    owner: team-payments
+    stakeholders: payments-team,platform-team
+    operations-team-email: k8s-ops@company.com
 ---
 apiVersion: v1
 kind: ResourceQuota
