@@ -188,7 +188,7 @@ Review quarterly:
 
 ## Best Practice 6: Communicate boundaries to teams
 
-The best quota system fails without organizational alignment:
+Organizational alignment is the foundation of a successful quota system.
 
 - **Publish quota budgets**: Each team should know its CPU, memory, and pod count limits
 - **Document request sizes**: Provide team-specific guidance on appropriate resource requests
