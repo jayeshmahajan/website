@@ -229,7 +229,7 @@ metadata:
   name: team-payments
   labels:
     owner: team-payments
-    stakeholders: payments-team,platform-team
+    stakeholders: "payments-team,platform-team"
     operations-team-email: k8s-ops@company.com
 ---
 apiVersion: v1
