@@ -101,8 +101,8 @@ Teams should understand: "You have a quota of 100 CPU cores. If you hit 85%, we'
 Resource Quotas are most effective when workloads explicitly declare their resource needs. Without defined requests and limits:
 
 - The {{< glossary_tooltip text="scheduler" term_id="kube-scheduler" >}} lacks the visibility required to make intelligent placement decisions, leading to suboptimal cluster bin-packing.
-- **Resource Quotas** can prevent a team from over-provisioning at the namespace level, but they cannot stop individual "noisy neighbor" pods from consuming all available resources on a specific node.
-
+- **Resource Quotas** manage total cluster capacity for a team, but they do not enforce node-level isolation; only per-container **Limits** can prevent a single "noisy neighbor" from starving its peers on the same host.
+  
 **Minimum requirement**: Set requests for all containers
 
 - Requests enable fair resource allocation
