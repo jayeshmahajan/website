@@ -219,7 +219,11 @@ While this post focuses on compute resources, a comprehensive governance strateg
 
 ## Practical example: Configuring for a team
 
-Here's a complete, production-ready example for the `team-payments` namespace:
+{{< note >}}
+ResourceQuotas are enforced at admission time, not dynamically rebalanced.
+{{< /note >}}
+
+Here's a complete, example for the `team-payments` namespace:
 
 ```yaml
 ---
