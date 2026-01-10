@@ -209,9 +209,9 @@ Team Payments - Resource Budget
 
 Resource quotas address compute, but also consider:
 
-- **Network bandwidth**: {{< glossary_tooltip text="Pod Disruption Budgets" term_id="pod-disruption-budget" >}} for stability
-- **Storage**: {{< glossary_tooltip text="Persistent Volume" term_id="persistent-volume" >}} quotas
-- **API rate limits**: Prevent stampeding through kube-apiserver
+- **Network bandwidth**: {{< glossary_tooltip text="Pod Disruption Budgets" term_id="pod-disruption-budget" >}} for stability.
+- **Storage**: {{< glossary_tooltip text="Persistent Volume" term_id="persistent-volume" >}} quotas.
+- **API rate limits**: Prevent overwhelming the API server.
 
 {{< note >}}
 While this post focuses on compute resources, a comprehensive governance strategy should also address network and storage isolation. Consider implementing {{< glossary_tooltip text="Network Policies" term_id="network-policy" >}} alongside resource quotas for complete multi-tenant isolation.
