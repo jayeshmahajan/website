@@ -209,7 +209,8 @@ Team Payments - Resource Budget
 
 Resource quotas address compute, but also consider:
 
-- **Network bandwidth**: {{< glossary_tooltip text="Pod Disruption Budgets" term_id="pod-disruption-budget" >}} for stability.
+- **Network Isolation**: NetworkPolicies to limit cross-namespace traffic.
+- **Availability**:  {{< glossary_tooltip text="Pod Disruption Budgets" term_id="pod-disruption-budget" >}} to maintain service stability.
 - **Storage**: {{< glossary_tooltip text="Persistent Volume" term_id="persistent-volume" >}} quotas.
 - **API rate limits**: Prevent overwhelming the API server.
 
