@@ -288,6 +288,7 @@ spec:
 - **Inconsistent Limit Ranges**: Different policies per team confuse users
 - **Not documenting defaults**: Teams won't understand why their pods get modified
 - **Not monitoring quota usage**: You can't improve what you don't measure
+- **Setting quota on critical infra, platform apps**: Platform or infra namespaces (ingress, monitoring, cert-manager) should be excluded from strict quotas or use separate policies.
 
 ## Conclusion
 
