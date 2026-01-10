@@ -17,10 +17,10 @@ Imagine a scenario: your data science team launches a large batch processing job
 
 Without resource boundaries, you also face:
 
-- **Unpredictable costs**: No visibility into per-team resource consumption
-- **Unfair resource allocation**: Early teams monopolize resources
-- **Cluster instability**: Unconstrained {{< glossary_tooltip text="pods" term_id="pod" >}} can trigger node failures
-- **Complex troubleshooting**: Hard to attribute resource exhaustion to specific teams
+- **Unpredictable costs**: No visibility into per-team resource consumption.
+- **Unfair resource allocation**: Early teams monopolize resources.
+- **Cluster instability**: Unconstrained {{< glossary_tooltip text="pods" term_id="pod" >}} can trigger node failures.
+- **Complex troubleshooting**: Hard to attribute resource exhaustion to specific teams.
 
 ## Understanding Resource Quotas and Limit Ranges
 
