@@ -176,9 +176,9 @@ kubectl describe resourcequota -n team-payments
 
 Create alerts:
 
-- When a namespace hits 80% of its quota
-- When a pod exceeds its request (potential memory leak)
-- When a pod is throttled (CPU requests too low)
+- **Namespace Quota Limit**: When a namespace hits 80% of its quota
+- **Memory Usage Near Limit**: When a pod significantly exceeds its request and approaches its limit (indicating a potential memory leak or under-provisioning).
+- **CPU Throttling**: When a container is being throttled because its actual usage has reached the defined CPU limit.
 
 Review quarterly:
 
