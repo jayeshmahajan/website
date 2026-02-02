@@ -40,7 +40,6 @@ The API server supports multiple caching layers. Ensure these are enabled:
 ```yaml
 # kube-apiserver flags
 --watch-cache=true
---watch-cache-sizes=# DEPRECATED: watchCacheSize
 --enable-garbage-collector=true
 ```
 
