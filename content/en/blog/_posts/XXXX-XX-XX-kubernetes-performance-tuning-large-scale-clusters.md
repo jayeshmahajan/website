@@ -449,6 +449,6 @@ Focus on the control plane components (API server, etcd, scheduler) first, as bo
 - [etcd Operations Guide](https://etcd.io/docs/latest/op-guide/)
 - [Kubelet Configuration](/docs/reference/config-api/kubelet-config.v1beta1/)
 - [Scheduler Configuration](/docs/reference/scheduling/config/)
-- [Etcs Disks Recommendations](https://etcd.io/docs/v3.6/op-guide/hardware/#disks)
+- [Etcd Disks Recommendations](https://etcd.io/docs/v3.6/op-guide/hardware/#disks)
 
 
