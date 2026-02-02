@@ -40,6 +40,7 @@ The API server supports multiple caching layers. Ensure these are enabled:
 ```yaml
 # kube-apiserver flags
 --watch-cache=true
+--watch-cache-sizes=# DEPRECATED: watchCacheSize
 --enable-garbage-collector=true
 ```
 
@@ -53,7 +54,7 @@ Adjust API server connection limits based on your workload:
 --max-mutating-requests-inflight=200
 ```
 
-For larger clusters, you may need to increase these values, but be cautious—higher limits increase memory usage.
+For larger clusters, you may need to increase these values, but be cautious—higher limits increase memory usage. Start with defaults and increase gradually while monitoring memory and request latency.
 
 {{< note >}}
 Monitor API server memory usage when adjusting `--max-requests-inflight` and `--max-mutating-requests-inflight`. Each inflight request consumes memory, and setting these too high can lead to out-of-memory (OOM) conditions.
@@ -61,7 +62,7 @@ Monitor API server memory usage when adjusting `--max-requests-inflight` and `--
 
 ### Use API server audit logging carefully
 
-Audit logging is important for security and compliance but can impact performance:
+Audit logging is important for security and compliance but can impact etcd write pressure, not just API server CPU, especially with large event volumes.
 
 ```yaml
 # kube-apiserver flags
@@ -105,7 +106,6 @@ Key etcd parameters to tune:
 ```yaml
 # etcd configuration
 --quota-backend-bytes=8589934592  # 8GB default, increase for large clusters
---max-request-bytes=1572864       # 1.5MB default
 --snapshot-count=100000           # Reduce for faster snapshots
 ```
 
@@ -123,6 +123,8 @@ High latency in these metrics indicates I/O bottlenecks.
 {{< note >}}
 etcd performance degrades significantly when the database size exceeds the quota. Monitor `etcd_server_quota_backend_bytes` and ensure compaction and defragmentation are running regularly.
 {{< /note >}}
+
+For large clusters, etcd typically requires at least 50-100 sequential write IOPS (fsyncs) per second.
 
 ### etcd compaction and defragmentation
 
@@ -164,10 +166,10 @@ Adjust how frequently kubelet syncs pod status:
 
 ```yaml
 # kubelet configuration
-syncFrequency: 10s  # Default 1m, reduce for faster status updates
+syncFrequency: 1m  # Default 1m, increase to 2m-5m for large clusters
 ```
 
-Be cautious—more frequent syncs increase API server load.
+In large-scale clusters, frequent syncing can overwhelm the API server. While 1m provides faster status updates, it is often better to increase this value to 2m or more to reduce control plane pressure, provided your application can tolerate slightly stale status reporting. This is rarely needed and should be adjusted only after profiling kubelet latency.
 
 ### Limit concurrent pod operations
 
@@ -178,7 +180,9 @@ Control how many pods kubelet processes simultaneously:
 --max-pods=110  # Default 110, adjust based on node capacity
 --pod-max-pids=4096  # Limit processes per pod
 ```
-
+{{< note >}}
+Increasing this without adjusting networking can lead to pod scheduling failures
+{{< /note >}}
 ### Enable container runtime optimizations
 
 If using containerd:
@@ -204,7 +208,7 @@ Network performance impacts pod communication, service discovery, and ingress/eg
 Choose CNI plugins optimized for performance:
 
 - **Calico**: Good for policy enforcement at scale
-- **Cilium**: eBPF-based, high performance
+- **Cilium**: eBPF-based, high performance. 
 - **Flannel**: Simple, lower overhead
 
 Benchmark your CNI plugin under load to validate performance.
@@ -225,17 +229,6 @@ ipvs:
 {{< note >}}
 IPVS mode provides better performance for clusters with many services (1000+), but requires kernel modules to be loaded on nodes. Test thoroughly before switching in production.
 {{< /note >}}
-
-### Service endpoint slicing
-
-Enable endpoint slicing to reduce the size of Endpoints objects:
-
-```yaml
-# kube-apiserver flags (enabled by default in v1.21+)
---feature-gates=EndpointSlice=true
-```
-
-This is especially important for services with many endpoints.
 
 ### DNS performance
 
@@ -326,6 +319,16 @@ profiles:
           - name: NodeResourcesMostAllocated
             weight: 1
 ```
+
+Prioritizing Most Allocated nodes can sometimes lead to faster outcomes in dense clusters because the scheduler focuses on filling existing capacity rather than constantly searching for the "emptiest" spot among thousands of nodes.
+
+Trade-offs for this are explained in this table:
+
+| Strategy | Efficiency | Risk of Throttling | Reliability |
+|----------|------------|--------------------|-------------|
+| **LeastAllocated (Spread)** | Low (wasteful) | Low (plenty of buffer) | High (isolates failures) |
+| **MostAllocated (Pack)** | High (cost-efficient) | High (resource contention) | Lower (tight margins) |
+
 
 ### Limit scheduler parallelism
 
@@ -450,5 +453,6 @@ Focus on the control plane components (API server, etcd, scheduler) first, as bo
 - [etcd Operations Guide](https://etcd.io/docs/latest/op-guide/)
 - [Kubelet Configuration](/docs/reference/config-api/kubelet-config.v1beta1/)
 - [Scheduler Configuration](/docs/reference/scheduling/config/)
+- [Etcs Disks Recommendations](https://etcd.io/docs/v3.6/op-guide/hardware/#disks)
 
 
