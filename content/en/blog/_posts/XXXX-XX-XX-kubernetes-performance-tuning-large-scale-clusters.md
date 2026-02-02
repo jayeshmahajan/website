@@ -391,22 +391,17 @@ Establish a performance testing framework for your cluster.
 
 ### Key metrics to monitor
 
-**API Server**:
-- `apiserver_request_duration_seconds`: Request latency
-- `apiserver_request_total`: Request rate
-- `apiserver_admission_webhook_admission_duration_seconds`: Admission latency
-
-**etcd**:
-- `etcd_disk_wal_fsync_duration_seconds`: Write latency
-- `etcd_server_requests_total`: Request rate and latency
-
-**Scheduler**:
-- `scheduler_scheduling_duration_seconds`: Scheduling latency
-- `scheduler_pending_pods`: Pending pod count
-
-**Kubelet**:
-- `kubelet_pod_worker_duration_seconds`: Pod sync duration
-- `kubelet_runtime_operations_duration_seconds`: Runtime operation latency
+| Component | Metric | Description |
+|-----------|--------|-------------|
+| **API Server** | `apiserver_request_duration_seconds` | Request latency |
+| | `apiserver_request_total` | Request rate |
+| | `apiserver_admission_webhook_admission_duration_seconds` | Admission latency |
+| **etcd** | `etcd_disk_wal_fsync_duration_seconds` | Write latency |
+| | `etcd_server_requests_total` | Request rate and latency |
+| **Scheduler** | `scheduler_scheduling_duration_seconds` | Scheduling latency |
+| | `scheduler_pending_pods` | Pending pod count |
+| **Kubelet** | `kubelet_pod_worker_duration_seconds` | Pod sync duration |
+| | `kubelet_runtime_operations_duration_seconds` | Runtime operation latency |
 
 ### Benchmarking tools
 
