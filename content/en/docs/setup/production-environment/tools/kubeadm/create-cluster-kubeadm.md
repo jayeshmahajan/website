@@ -199,8 +199,7 @@ This will allow you to pass `--control-plane-endpoint=cluster-endpoint` to `kube
 `kubeadm join`. Later you can modify `cluster-endpoint` to point to the address of your load-balancer in a
 high availability scenario.
 
-Turning a single control plane cluster created without `--control-plane-endpoint` into a highly available cluster
-is not supported by kubeadm.
+While kubeadm does not provide an automated one-command process to convert a single control plane cluster created without `--control-plane-endpoint` into a highly available cluster, it is possible to perform this conversion manually through careful reconfiguration. See [Converting a single control plane cluster to HA](#converting-to-ha) for detailed steps.
 
 ### More information
 
@@ -395,6 +394,98 @@ kubectl label nodes --all node.kubernetes.io/exclude-from-external-load-balancer
 
 See [Creating Highly Available Clusters with kubeadm](/docs/setup/production-environment/tools/kubeadm/high-availability/)
 for steps on creating a high availability kubeadm cluster by adding more control plane nodes.
+
+### Converting a single control plane cluster to HA {#converting-to-ha}
+
+To convert a single control plane Kubernetes cluster bootstrapped with kubeadm into a High Availability (HA) cluster, follow this high-level process:
+
+{{< warning >}}
+This conversion process requires manual reconfiguration of multiple components and should be performed carefully. It is recommended to test this process in a lower environment first and ensure you have proper backups of your cluster state and etcd data.
+{{< /warning >}}
+
+1. **Create a Load Balancer**: Set up a Layer 4 (TCP) load balancer for the control plane. It is recommended to use a DNS CNAME that points to this load balancer to maintain a constant endpoint even if the underlying infrastructure changes.
+
+2. **Update the API Server's Certificate**: Add new Subject Alternative Names (SANs) to the API server's TLS certificate that match the load balancer's IP addresses or DNS names. This prevents communication errors when accessing the cluster through the load balancer. See [Manual certificate renewal](/docs/tasks/administer-cluster/kubeadm/kubeadm-certs/#manual-certificate-renewal) for more details.
+
+3. **Reconfigure the Existing Control Plane Node**:
+   - **Update Kubelet**: Edit `/etc/kubernetes/kubelet.conf` to point the `server:` line to the load balancer and restart the kubelet.
+   
+   - **Update Controller Manager and Scheduler**: 
+     - Edit `/etc/kubernetes/controller-manager.conf` and locate the `clusters` section. Update the `server:` field under the cluster's `server` entry to point to your load balancer endpoint (e.g., `https://cluster-endpoint.example.com:6443`).
+     - Similarly, edit `/etc/kubernetes/scheduler.conf` and update the `server:` field in the `clusters` section to the same load balancer endpoint.
+     - Restart the controller manager and scheduler containers. You can do this by restarting the kubelet service, which will restart all static Pods:
+       ```bash
+       systemctl restart kubelet
+       ```
+   
+   - **Update Kube-proxy**: 
+     - Edit the kube-proxy ConfigMap to update the `server` field in the kubeconfig:
+       ```bash
+       kubectl edit configmap kube-proxy -n kube-system
+       ```
+     - In the editor, locate the `kubeconfig.conf` section (or `config.conf` depending on your Kubernetes version) and find the `server:` field under the `clusters` section. Update it to point to your load balancer endpoint (e.g., `https://cluster-endpoint.example.com:6443`).
+     - Save and exit the editor. The kube-proxy Pods will automatically restart and pick up the new configuration. You can verify the restart with:
+       ```bash
+       kubectl get pods -n kube-system -l k8s-app=kube-proxy
+       ```
+     - If the Pods don't restart automatically, you can force a restart by deleting them:
+       ```bash
+       kubectl delete pods -n kube-system -l k8s-app=kube-proxy
+       ```
+
+4. **Update Worker Nodes**: Repeat the Kubelet update process on all worker nodes and restart their kube-proxy Pods to ensure they communicate through the load balancer.
+
+5. **Update In-Cluster Configuration**:
+   - **Update kubeadm-config ConfigMap**:
+     - Edit the ConfigMap using kubectl:
+       ```bash
+       kubectl edit configmap kubeadm-config -n kube-system
+       ```
+     - In the editor, locate the `ClusterConfiguration` section (it may be under a `data` field like `ClusterConfiguration` or embedded in the YAML structure). Find or add the `controlPlaneEndpoint` field and set it to your load balancer's DNS CNAME or IP address with port (e.g., `cluster-endpoint.example.com:6443` or `192.168.1.100:6443`).
+     - The structure should look like:
+       ```yaml
+       apiVersion: v1
+       kind: ConfigMap
+       metadata:
+         name: kubeadm-config
+         namespace: kube-system
+       data:
+         ClusterConfiguration: |
+           ...
+           controlPlaneEndpoint: "cluster-endpoint.example.com:6443"
+           ...
+       ```
+     - Save and exit the editor.
+   
+   - **Update cluster-info ConfigMap**:
+     - Edit the ConfigMap using kubectl:
+       ```bash
+       kubectl edit configmap cluster-info -n kube-public
+       ```
+     - In the editor, locate the `kubeconfig` section (usually under the `data` field). Find the `server:` field in the `clusters` section and update it to point to your load balancer endpoint (e.g., `https://cluster-endpoint.example.com:6443`).
+     - The structure should look like:
+       ```yaml
+       apiVersion: v1
+       kind: ConfigMap
+       metadata:
+         name: cluster-info
+         namespace: kube-public
+       data:
+         kubeconfig: |
+           apiVersion: v1
+           clusters:
+           - cluster:
+               server: https://cluster-endpoint.example.com:6443
+               ...
+           ...
+       ```
+     - Save and exit the editor.
+
+6. **Add New Control Plane Nodes**: Use the `kubeadm join` command with the `--control-plane` flag to add additional nodes. You may need to upload certificates again using `kubeadm init phase upload-certs` and generate a new bootstrap token if the cluster has been running for a while. See [Creating Highly Available Clusters with kubeadm](/docs/setup/production-environment/tools/kubeadm/high-availability/) for detailed instructions on adding control plane nodes.
+
+{{< note >}}
+For a more automated approach to creating an HA cluster from the start, it is recommended to use `--control-plane-endpoint` during the initial `kubeadm init` command. This avoids the need for manual reconfiguration later.
+{{< /note >}}
 
 ### Adding worker nodes {#join-nodes}
 
