@@ -40,8 +40,9 @@ The API server supports multiple caching layers. Ensure these are enabled:
 ```yaml
 # kube-apiserver flags
 --watch-cache=true
---watch-cache-sizes=# DEPRECATED: watchCacheSize
 --enable-garbage-collector=true
+# New in v1.34+: Use snapshottable cache for consistent list performance
+--feature-gates=ConsistentListFromCache=true
 ```
 
 ### Configure connection limits
@@ -144,6 +145,8 @@ Automate these operations via cron jobs or Kubernetes {{< glossary_tooltip text=
 
 The {{< glossary_tooltip text="kubelet" term_id="kubelet" >}} runs on each node and manages pod lifecycles. With many pods per node, kubelet can become a bottleneck.
 
+As of v1.35, In-Place Pod Resizing is GA. Instead of the expensive cycle of killing and recreating pods to adjust resources—which creates significant API and Scheduler churn at scale—you can now update container resources directly. This is vital for maintaining stability in clusters with high churn.
+
 ### Configure kubelet resource limits
 
 Set appropriate CPU and memory limits for kubelet:
@@ -202,6 +205,7 @@ Consider using faster snapshotters like `stargz` or `nydus` for image pull perfo
 ## Network performance optimization
 
 Network performance impacts pod communication, service discovery, and ingress/egress traffic.
+To reduce cross-node latency and cloud provider 'east-west' traffic costs, use the trafficDistribution field in your Service specs. Setting this to PreferSameNode (GA in v1.35) ensures that traffic stays local whenever possible.
 
 ### CNI plugin selection
 
@@ -335,10 +339,13 @@ Trade-offs for this are explained in this table:
 ### Limit scheduler parallelism
 
 Control how many pods the scheduler processes concurrently:
+Recent scheduler updates have optimized how the scheduler handles queues, making it much more efficient for "batch-style" workloads common in large clusters.
 
 ```yaml
 # kube-scheduler flags
---parallelism=16  # Default 16, increase for faster scheduling
+--parallelism=16 
+# Monitor scheduler_scheduling_duration_seconds; 
+# v1.35 introduces opportunistic batching for pods with identical signatures.
 ```
 
 ### Enable scheduler profiling
@@ -436,6 +443,7 @@ Define performance SLAs for your cluster:
 - **Neglecting etcd**: etcd is often the bottleneck but gets less attention
 - **No performance testing**: Changes should be validated under load
 - **Insufficient monitoring**: Can't optimize what you can't measure
+- **Ignoring WebSocket Transition**: Since v1.35, Kubernetes has transitioned streaming connections (like exec and attach) to WebSockets. Ensure your load balancers and identity proxies (like OIDC providers) are configured to handle WebSocket traffic, or you will see timeouts at scale.
 
 ## Conclusion
 
