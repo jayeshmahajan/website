@@ -328,12 +328,11 @@ Prioritizing Most Allocated nodes can sometimes lead to faster outcomes in dense
 
 Trade-offs for this are explained in this table:
 
-|-----------------------------|-----------------------|----------------------------|--------------------------|
 | Strategy                    | Efficiency            | Risk of Throttling         | Reliability              |
 |-----------------------------|-----------------------|----------------------------|--------------------------|
 | **LeastAllocated (Spread)** | Low (wasteful)        | Low (plenty of buffer)     | High (isolates failures) |
 | **MostAllocated (Pack)**    | High (cost-efficient) | High (resource contention) | Lower (tight margins)    |
-|-----------------------------|-----------------------|----------------------------|--------------------------|
+
 
 
 ### Limit scheduler parallelism
