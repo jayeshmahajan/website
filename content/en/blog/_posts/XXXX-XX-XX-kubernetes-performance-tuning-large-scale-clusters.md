@@ -3,9 +3,9 @@ layout: blog
 title: 'Kubernetes Performance Tuning: Optimizing Large-Scale Clusters'
 date: XXXX-XX-XX
 draft: true
-slug: kubernetes-performance-tuning-large-scale-clusters
+slug: kubernetes-performance-tuning-optimizing-large-scale-clusters
 author: >
-  Jayesh Mahajan (CVS Health)
+  Jayesh Mahajan 
 
 ---
 
