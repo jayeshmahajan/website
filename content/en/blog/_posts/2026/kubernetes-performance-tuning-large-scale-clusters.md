@@ -16,7 +16,7 @@ Before configuring any flag, you must be obsessed with your p99 metrics because 
 
 The {{< glossary_tooltip text="kube-apiserver" term_id="kube-apiserver" >}} is the central control point for all Kubernetes operations, the single point of failure for everything. As cluster size grows, API server performance becomes critical. To keep it responsive, you should start by maximizing its internal caching layers. By ensuring --watch-cache=true is set and leveraging newer features like the snapshottable cache via the ConsistentListFromCache feature gate, stable in v1.34+. It serves heavy LIST requests from memory instead of hitting etcd every time. Controllers get faster responses, but plan for more RAM on control plane nodes. Additionally, emable APIServingWithRoutine and LoggingAlphaOptions for API server performance improvement and improving logging performance.
 
-```yaml
+```
 # kube-apiserver flags
 --watch-cache=true # Default: true
 --enable-garbage-collector=true # Default: true Enables the generic garbage collector. MUST be synced with the corresponding flag of the kube-controller-manager.
@@ -29,7 +29,7 @@ The {{< glossary_tooltip text="kube-apiserver" term_id="kube-apiserver" >}} is t
 
 When you start seeing "429 Too Many Requests" errors or high latency, it is a sign the API server connection limits needs tuning. Unlike simple TCP connection limits, flags like --max-requests-inflight and --max-mutating-requests-inflight control how many concurrent operations the API server processes at once. This isn't TCP connection limits but concurrent operations. For example N number of connections may have 0 in flight request or 1 connection could have N. While raising these values (toward higher value for non-mutating requests) can clear traffic jams in large clusters, you must proceed with caution by looking at memory metrics for control plane. Each concurrent request consumes additional RAM, so I recommend increasing these limits gradually while keeping a close eye on memory usage to avoid triggering an out-of-memory (OOM) event that could take down the entire control plane. Kubernetes uses API PRiority and Fairness to manage traffic but the global capacity is still capped by these flags.
 
-```yaml
+```
 # kube-apiserver flags
 --max-requests-inflight=400  # (Default: 400) This and --max-mutating-requests-inflight are summed to determine the server's total concurrency limit (which must be positive) if --enable-priority-and-fairness is true. Otherwise, this flag limits the maximum number of non-mutating requests in flight, or a zero value disables the limit completely.
 --max-mutating-requests-inflight=200 # This and --max-requests-inflight are summed to determine the server's total concurrency limit (which must be positive) if --enable-priority-and-fairness is true. Otherwise, this flag limits the maximum number of mutating requests in flight, or a zero value disables the limit completely.
@@ -41,7 +41,7 @@ Monitor apiserver_flowcontrol_current_inflight, container_memory_working_set_byt
 
 Audit logging is another area where performance can degrade silently. While critical for security, logging every event can swamp  disk I/O and CPU, especially during high usage periods. To mitigate this, always use --audit-log-mode=batch to buffer events and write them in chunks.
 
-```yaml
+```
 # kube-apiserver flags
 --audit-log-mode=batch   #Strategy for sending audit events. Blocking indicates sending events should block server responses. Batch causes the backend to buffer and write events asynchronously. Known modes are batch,blocking,blocking-strict.
 --audit-log-maxsize=100  # The maximum size in megabytes of the audit log file before it gets rotated.
@@ -52,7 +52,7 @@ Audit logging is another area where performance can degrade silently. While crit
 
 The {{< glossary_tooltip text="etcd" term_id="etcd" >}} server's performance is sensitive to I/O latency. The controller constantly asking etcd 'What changed?', it overwhelms etcd. The ```--watch-cache=true``` allows the API server to answer those questions from its own memory, freeing up etcd. The etcd is the {{< glossary_tooltip text="control plane" term_id="control-plane" >}}'s persistent storage backend. If an fsync takes longer than 10ms, your cluster stability is at risk because etcd's raft consensus will start failing, triggering constant leader elections. For large cluster you should always run etcd on dedicated hardware or instance. Pretty good portion of etcs is events so seperating it out will help reducing etcd overload. For the most demanding environments, the best way to protect the API server is to isolate high volume event traffic entirely by using --etcd-servers-overrides. By pointing events to a dedicated etcd instance, you ensure that a flood of "pod scheduled" or "node heartbeat" events never starves your critical cluster state for resources. Keep etcd nodes in the same data center (cloud zone) to minimize network jitter, as high latency between members is a silent killer of cluster health as it grows.
 
-```yaml
+```
 # kube-apiserver flags
 --etcd-servers="https://etcd-main-1:2379,https://etcd-main-2:2379,https://etcd-main-3:2379"
 #--etcd-servers-overrides strings
@@ -62,7 +62,7 @@ The {{< glossary_tooltip text="etcd" term_id="etcd" >}} server's performance is 
 
 For the etcd the standard 100ms heartbeat is many times aggressive for cross-zone deployments. Bumping the interval and election timeout helps prevent a leader election death spiral during minor network hiccups.
 
-```yaml
+```
 # etcd configuration
 --quota-backend-bytes=4294967296  # 2GB default, increase for large clusters
 # If your etcd members are across zones, standard timeouts might be too aggressive to handle network jitter, causing frequent leader elections.
@@ -94,7 +94,7 @@ syncFrequency: 1m  # Default 1m, increase to 2m-5m for large clusters
 ```
 
 Manage the density and process overhead on your nodes by tuning max-pods and pod-max-pids. Resetting this to 110 will help in case it was set without architectural design discussion within your team. 
-```yaml
+```
 # kubelet flags
 --max-pods=110  # Default and no more than 110
 ```
@@ -120,7 +120,7 @@ Your choice of CNI is the foundation of your network performance. While Flannel 
 
 If you aren't using an eBPF-based CNI, the legacy iptables mode in kube-proxy will eventually become a bottleneck as your Service count grows. Starting in v1.31, you can switch to nftables mode. It provides a significant performance boost over the old iptables chains without the operational complexity that often comes with migrating to IPVS.
 
-```yaml
+```
 # kube-proxy ConfigMap
 apiVersion: kubeproxy.config.k8s.io/v1alpha1
 kind: KubeProxyConfiguration
@@ -134,7 +134,7 @@ DNS if not configured properly, it's latency could turn into performance nighmar
 kubectl -n kube-system edit configmap node-local-dns
 
 under cluster.local
-```yaml
+```
 cache {
     success 2560 30
     denial 2560 5
